@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"log"
+	"github.com/Hosein110011/go-master/pkg/models"
 )
 
 
@@ -57,33 +58,24 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Accessing keys and values in the map
-		for key, value := range data {
 			// fmt.Printf("Key: %s, Value: %v\n", key, value)
-			if data["duty"] == "ping" {
-				switch key {
-				case "data":
-					subData, ok := value.(map[string]interface{})
-					if !ok {
-						log.Println("Error decoding nested JSON:", err)
-						continue
-					}
-					if subData["type"] == "ping" {
-						fmt.Println("Received ping")
-					} else {
-						fmt.Println("CURL")
-					}
-
-					// Accessing keys and values in the nested map
-					for subKey, subValue := range subData {
-						fmt.Printf("Nested Key: %s, Nested Value: %v\n", subKey, subValue)
-					}
-				default:
-					fmt.Printf("Key: %s, Value: %v\n", key, value)
-				
-				}
-			} else {
-				fmt.Println("CURL")
+		if data["duty"] == "ping" {
+			cloud := &models.Cloud{}
+			host := &models.Host{}
+			// db := &models.GetDB()
+			cloud = models.getCloudByDcName(data["data_center"].(string))
+			if cloud == (&models.Cloud{}) {
+				cloud.DatacenterName = data["data_center"].(string)
+				host.Ip = data["destination"].(string)
+				host.IpType = data["type"].(string)
+				host.TotalLostPacket = append(host.TotalLostPacket ,data["packet_loss_count"].(int))
+				host.TotalTime = append(host.TotalTime ,data["rtt_avg"].(float64))
+				cloud = cloud.CreateCloud()
+				host = host.CreateHost()
+				cloud.Hosts = append(cloud.Hosts, *host)
 			}
+		} else {
+			fmt.Println("CURL")
 		}
 		if err != nil {
 			log.Println(err)
