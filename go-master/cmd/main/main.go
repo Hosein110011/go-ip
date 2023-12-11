@@ -2,6 +2,7 @@ package main
 
 import (
     // "encoding/json"
+	"time"
     "fmt"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -101,12 +102,27 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 				host.TotalTime = append(host.TotalTime ,data["rtt_avg"].(float64))
 				// host.CloudID = cloud.ID
 				models.UpdateHost(host)
-				hosts := models.GetHostsByCloud(cloud)
-				fmt.Println(hosts)
+				// hosts := models.GetHostsByCloud(cloud)
+				// fmt.Println(hosts)
 			}
 
 		} else {
 			fmt.Println("CURL")
+			Url := &models.Url{}
+			Curl := &models.Curl{}
+			Url = models.GetUrlByUrl(data["url"].(string))
+			if Url.ID == 0 {
+				Url.Name = data["url"].(string)
+				Url.Date = time.Now()
+				Url.Url = data["url"].(string)
+				Url.CreateUrl()
+			}
+			Curl.UrlID = Url.ID
+			Curl.Status = int64(data["status_code"].(float64))
+			Curl.Time = time.Now()
+			Curl.CreateCurl()
+			Url.Curls = append(Url.Curls, *Curl)
+			models.UpdateUrl(Url)
 		}
 		if err != nil {
 			log.Println(err)
