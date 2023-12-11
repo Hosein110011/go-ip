@@ -2,67 +2,67 @@ package schema
 
 import (
 	"fmt"
+
 	"github.com/Hosein110011/go-master/pkg/models"
 )
 
-
 type ApiResponse struct {
-    Message    string                   `json:"message"`
-    StatusCode int                      `json:"statusCode"`
-    IsSuccess  bool                     `json:"isSuccess"`
-    Result     []DataCenterApiResponse  `json:"result"`
+	Message    string                  `json:"message"`
+	StatusCode int                     `json:"statusCode"`
+	IsSuccess  bool                    `json:"isSuccess"`
+	Result     []DataCenterApiResponse `json:"result"`
 }
 
 type ApiResponse2 struct {
-	Message    string                   `json:"message"`
-    StatusCode int                      `json:"statusCode"`
-    IsSuccess  bool                     `json:"isSuccess"`
-    Result     []UrlApiResponse  `json:"result"`
+	Message    string           `json:"message"`
+	StatusCode int              `json:"statusCode"`
+	IsSuccess  bool             `json:"isSuccess"`
+	Result     []UrlApiResponse `json:"result"`
 }
 
 type DataCenterApiResponse struct {
-    DataCenterName string            `json:"data_center_name"`
-    Types          map[string]map[string]HostMetrics `json:"types"`
+	DataCenterName string                            `json:"data_center_name"`
+	Types          map[string]map[string]HostMetrics `json:"types"`
 }
 
 type HostMetrics struct {
-    LostPacketLastMin  string `json:"lost_packet_last_min"`
-    LostPacketLastHour string `json:"lost_packet_last_hour"`
-    LostPacketLastDay  string `json:"lost_packet_last_day"`
-    RTTAvgLastHalf     string `json:"rtt_avg_last_half"`
+	LostPacketLastMin  string `json:"lost_packet_last_min"`
+	LostPacketLastHour string `json:"lost_packet_last_hour"`
+	LostPacketLastDay  string `json:"lost_packet_last_day"`
+	RTTAvgLastHalf     string `json:"rtt_avg_last_half"`
 }
 
 type UrlApiResponse struct {
-	Name    string `json:"name"`
-	Url     string `json:"url"`
-	Date    string `json:"date"`
-	HourlyStatus  []CurlsApiResponse `json:"hourly_status"`
+	Name         string             `json:"name"`
+	Url          string             `json:"url"`
+	Date         string             `json:"date"`
+	HourlyStatus []CurlsApiResponse `json:"hourly_status"`
 }
 
 type CurlsApiResponse struct {
-	Hour      string `json:"hour"`
-	Details   []CurlApiResponse `json:"details"`
+	Hour    int               `json:"hour"`
+	Details []CurlApiResponse `json:"details"`
 }
 
 type CurlApiResponse struct {
-	Time      string `json:"time"`
-	Status    string `json:"status"`
-} 
+	Time   string `json:"time"`
+	Status int64  `json:"status"`
+}
 
 func GenerateApiResponse() (*ApiResponse, error) {
 	var clouds []models.Cloud
 	clouds = models.GetAllClouds()
 	var result []DataCenterApiResponse
 	for _, cloud := range clouds {
-        types := make(map[string]map[string]HostMetrics)
+		types := make(map[string]map[string]HostMetrics)
 		hosts := models.GetHostsByCloud(&cloud)
-        for _, host := range hosts {
-            if _, exists := types[host.IpType]; !exists {
-                types[host.IpType] = make(map[string]HostMetrics)
-            }
+		for _, host := range hosts {
+			if _, exists := types[host.IpType]; !exists {
+				types[host.IpType] = make(map[string]HostMetrics)
+			}
 
-            // Assuming TotalLostPacket and TotalTime are slices with at least 3 and 2 elements respectively
-            lenLostPackets := len(host.TotalLostPacket)
+			// Assuming TotalLostPacket and TotalTime are slices with at least 3 and 2 elements respectively
+			lenLostPackets := len(host.TotalLostPacket)
 			var lastMin []float64
 			if lenLostPackets >= 60 {
 				lastMin = host.TotalLostPacket[lenLostPackets-60:]
@@ -89,27 +89,26 @@ func GenerateApiResponse() (*ApiResponse, error) {
 			}
 
 			types[host.IpType][host.Ip] = HostMetrics{
-                LostPacketLastMin:  fmt.Sprintf("%.2f", (sumFloats(lastMin)/60)*100),
-                LostPacketLastHour: fmt.Sprintf("%.2f", (sumFloats(lastHour)/3600)*100),
-                LostPacketLastDay:  fmt.Sprintf("%.2f", (sumFloats(lastDay)/86400)*100),
-                RTTAvgLastHalf:     fmt.Sprintf("%.2f", (sumFloats(lastHalf))/1800),
-            }
-        }
+				LostPacketLastMin:  fmt.Sprintf("%.2f", (sumFloats(lastMin)/60)*100),
+				LostPacketLastHour: fmt.Sprintf("%.2f", (sumFloats(lastHour)/3600)*100),
+				LostPacketLastDay:  fmt.Sprintf("%.2f", (sumFloats(lastDay)/86400)*100),
+				RTTAvgLastHalf:     fmt.Sprintf("%.2f", (sumFloats(lastHalf))/1800),
+			}
+		}
 
-        result = append(result, DataCenterApiResponse{
-            DataCenterName: cloud.DatacenterName,
-            Types:          types,
-        })
-    }
+		result = append(result, DataCenterApiResponse{
+			DataCenterName: cloud.DatacenterName,
+			Types:          types,
+		})
+	}
 
-    return &ApiResponse{
-        Message:    "hosts fetched successfully!",
-        StatusCode: 200,
-        IsSuccess:  true,
-        Result:     result,
-    }, nil
+	return &ApiResponse{
+		Message:    "hosts fetched successfully!",
+		StatusCode: 200,
+		IsSuccess:  true,
+		Result:     result,
+	}, nil
 }
-
 
 func sumFloats(slice []float64) float64 {
 	var total float64
@@ -121,17 +120,41 @@ func sumFloats(slice []float64) float64 {
 
 func GenerateCurlApiResponse() (*ApiResponse2, error) {
 	var urls []models.Url
+	// var result ApiResponse2
 	urls = models.GetAllUrls()
-	UrlResponse = []UrlApiResponse{}
+	UrlResponse := []UrlApiResponse{}
 	for _, url := range urls {
+		var UrlSerializer UrlApiResponse
+		UrlSerializer.Url = url.Url
+		UrlSerializer.Name = url.Name
+		UrlSerializer.Date = url.Date.Format("2006-01-02")
 		var curls []models.Curl
-		curls = models.GetCurlsByUrl(&url)
-		for i := 0; i <= 23; i++ {
-			var CurlSerializer []CurlApiResponse
-			var UrlDetails []CurlsApiResponse
+		curls, _ = models.GetCurlsByUrl(&url)
+		for i := 0; i <= len(curls)/12; i++ {
+			var UrlDetails CurlsApiResponse
+			var CurlSerializerList []CurlApiResponse
 			UrlDetails.Hour = i
+			end := i + 12
+			if end > len(curls) {
+				end = len(curls)
+			}
+			for _, curl := range curls {
+				var CurlSerializer CurlApiResponse
+				CurlSerializer.Time = curl.Time.Format("15:04")
+				CurlSerializer.Status = curl.Status
+				CurlSerializerList = append(CurlSerializerList, CurlSerializer)
+			}
+			UrlDetails.Details = CurlSerializerList[i:end]
+			UrlSerializer.HourlyStatus = append(UrlSerializer.HourlyStatus, UrlDetails)
 
 		}
-	} 
-
+		UrlResponse = append(UrlResponse, UrlSerializer)
+		// fmt.Println(UrlResponse)
+	}
+	return &ApiResponse2{
+		Message:    "urls fetched successfully!",
+		StatusCode: 200,
+		IsSuccess:  true,
+		Result:     UrlResponse,
+	}, nil
 }

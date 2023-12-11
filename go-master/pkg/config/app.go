@@ -4,7 +4,7 @@ import (
 	// "github.com/jinzhu/gorm"
 	// _ "github.com/jinzhu/gorm/dialects/postgres"
 	"gorm.io/driver/postgres"
-  	"gorm.io/gorm"
+	"gorm.io/gorm"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 
 func Connect() {
 	d, err := gorm.Open(postgres.New(postgres.Config{
-		DSN: "user=postgres password=h55555H55555h dbname=go port=5432 sslmode=disable TimeZone=Asia/Tehran",
+		DSN:                  "user=postgres password=h55555H55555h dbname=go port=5432 sslmode=disable TimeZone=Asia/Tehran",
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 	if err != nil {
