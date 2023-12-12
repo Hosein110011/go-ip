@@ -26,7 +26,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-	erre := godotenv.Load("../../.env") // Load .env file
+	erre := godotenv.Load(".env") // Load .env file
 	if erre != nil {
 		log.Fatal("Error loading .env file", erre)
 	}

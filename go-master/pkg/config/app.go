@@ -3,6 +3,9 @@ package config
 import (
 	// "github.com/jinzhu/gorm"
 	// _ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -12,8 +15,12 @@ var (
 )
 
 func Connect() {
+	erre := godotenv.Load(".env") // Load .env file
+	if erre != nil {
+		log.Fatal("Error loading .env file", erre)
+	}
 	d, err := gorm.Open(postgres.New(postgres.Config{
-		DSN:                  "user=postgres password=h55555H55555h dbname=go port=5432 sslmode=disable TimeZone=Asia/Tehran",
+		DSN: os.Getenv("DSN"),                 
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 	if err != nil {
