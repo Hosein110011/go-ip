@@ -130,22 +130,30 @@ func GenerateCurlApiResponse() (*ApiResponse2, error) {
 		UrlSerializer.Date = url.Date.Format("2006-01-02")
 		var curls []models.Curl
 		curls, _ = models.GetCurlsByUrl(&url)
-		for i := 1; i <= len(curls)/12; i++ {
+		// fmt.Println(curls)
+		CurlSerializerList := []CurlApiResponse{}
+		for i := 0; i <= len(curls); i += 12 {
 			var UrlDetails CurlsApiResponse
-			var CurlSerializerList []CurlApiResponse
-			UrlDetails.Hour = i
-			end := i * 12
-			first := end - 12
+			UrlDetails.Hour = i / 12
+			
+			end := i + 12
 			if end > len(curls) {
-				end = len(curls)
+				end = len(curls)-1
 			}
 			for _, curl := range curls {
 				var CurlSerializer CurlApiResponse
 				CurlSerializer.Time = curl.Time.Format("15:04")
 				CurlSerializer.Status = curl.Status
+				// fmt.Println(CurlSerializer)
 				CurlSerializerList = append(CurlSerializerList, CurlSerializer)
 			}
-			UrlDetails.Details = CurlSerializerList[first:end]
+			CurlSerializerList = reverse(CurlSerializerList)
+			// fmt.Println(CurlSerializerList)
+			// fmt.Println(CurlSerializerList[end:])
+			// fmt.Println(CurlSerializerList[i:end])
+			// fmt.Println(CurlSerializerList)
+			UrlDetails.Details = CurlSerializerList[i:end]
+			// fmt.Println(UrlDetails.Details)
 			UrlSerializer.HourlyStatus = append(UrlSerializer.HourlyStatus, UrlDetails)
 
 		}
@@ -158,4 +166,12 @@ func GenerateCurlApiResponse() (*ApiResponse2, error) {
 		IsSuccess:  true,
 		Result:     UrlResponse,
 	}, nil
+}
+
+
+func reverse(slice []CurlApiResponse) []CurlApiResponse {
+    for i, j := 0, len(slice)-1; i < j; i, j = i+1, j-1 {
+        slice[i], slice[j] = slice[j], slice[i]
+    }
+	return slice
 }

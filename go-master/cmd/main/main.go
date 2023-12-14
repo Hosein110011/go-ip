@@ -123,7 +123,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			Curl := &models.Curl{}
 			Url = models.GetUrlByUrl(data["url"].(string))
 			if Url.ID == 0 {
-				Url.Name = data["url"].(string)
+				Url.Name = data["name"].(string)
 				Url.Date = time.Now()
 				Url.Url = data["url"].(string)
 				Url.CreateUrl()
